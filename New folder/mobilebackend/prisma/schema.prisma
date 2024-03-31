@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+// schema.prisma
+enum Role {
+  
+  ADMIN
+  USER
+  
+}
+enum UserType {
+  EMPLOYEE
+  JOB_SEEKER
+}
+
+// Define the model for psychologists
+model Job {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  phonenumber String
+
+  title       String
+  description String
+  salary      Int?
+  creater     User     @relation("user_jobs", fields: [createrId], references: [id])
+  createrId   Int
+ Review Review[]
+  userType    UserType 
+
+  @@map("jobs")
+}
+
+// Define the model for clients
+model User {
+  id       Int       @id @default(autoincrement())
+  firstName String
+  lastName  String
+  role        Role     
+  username String
+  email     String    @unique
+  password  String 
+  pic String? @default("../../profilepic/download(2).png")
+  Review Review[]
+     // Note: You should hash passwords before storing them
+ jobs      Job[]    @relation("user_jobs")
+  isBlocked Boolean  @default(false)
+   @@map("users")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  content String
+  rate Int
+
+  job     Job   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId   String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId Int
+
+  @@map("Review")
+}
