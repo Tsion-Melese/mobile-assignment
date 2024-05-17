@@ -1,16 +1,3 @@
-import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tryfront/auth/view/loginForm.dart';
-import 'package:tryfront/job/data_provider/jobs_data_provider.dart';
-import 'package:tryfront/job/view/employer_job.dart';
-import 'package:tryfront/job/view/job_create.dart';
-import 'package:tryfront/job/bloc/job_bloc.dart'; // Import JobBloc
-import 'package:tryfront/user/repo/user_repo.dart';
-import 'package:tryfront/user/view/profile.dart'; // Import ProfilePage
-import 'package:tryfront/user/data_provider/user_data.dart';
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final dio = Dio(); // Instantiate Dio
@@ -28,9 +15,14 @@ Future<void> main() async {
 }
 
 class MyApp extends StatelessWidget {
+  final AuthRepository authRepository;
   final JobRepository jobRepository;
 
-  const MyApp({Key? key, required this.jobRepository}) : super(key: key);
+  const MyApp({
+    Key? key,
+    required this.authRepository,
+    required this.jobRepository,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -41,21 +33,23 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => BlocProvider<JobBloc>(
-              create: (context) =>
-                  JobBloc(jobRepository), // Provide JobBloc with jobRepository
-              child: LoginPage(),
+        '/': (context) => MultiBlocProvider(
+              // Wrap with MultiBlocProvider
+              providers: [
+                BlocProvider<LoginBloc>(
+                  create: (context) => LoginBloc(authRepository),
+                ),
+                BlocProvider<JobBloc>(
+                  create: (context) => JobBloc(jobRepository),
+                ),
+              ],
+              child:
+                  LoginPage(), // Assuming LoginPage is your login page widget
             ),
         '/profile': (context) => ProfilePage(),
         '/createjob': (context) => BlocProvider<JobBloc>(
-              create: (context) =>
-                  JobBloc(jobRepository), // Provide JobBloc with jobRepository
+              create: (context) => JobBloc(jobRepository),
               child: CreateJobPage(),
-            ),
-        '/employerjob': (context) => BlocProvider<JobBloc>(
-              create: (context) =>
-                  JobBloc(jobRepository), // Provide JobBloc with jobRepository
-              child: EmployerJobsPage(),
             ),
       },
     );

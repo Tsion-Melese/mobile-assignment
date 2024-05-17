@@ -1,23 +1,21 @@
 import 'dart:convert';
-import 'dart:io';
-
-import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tryfront/auth/model/auth_model.dart';
-import 'package:tryfront/auth/repos/user_credential.dart';
 
 class AuthDataProvider {
-  final Dio _dio; // Use late for later initialization
+  final String baseUrl;
 
-  AuthDataProvider({required String baseUrl})
-      : _dio = Dio(BaseOptions(baseUrl: baseUrl));
+  AuthDataProvider({required this.baseUrl});
 
   Future<Map<String, dynamic>> registerUser(User user) async {
     try {
-      final response = await _dio.post('/auth/register', data: user.toJson());
+      final response = await http.post(Uri.parse('$baseUrl/auth/register'),
+          body: json.encode(user.toJson()),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          });
       if (response.statusCode == 200) {
-        return response.data; // Return the JSON response directly
+        return json.decode(response.body);
       } else {
         throw Exception(
             'Registration failed with status: ${response.statusCode}');
